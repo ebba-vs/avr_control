@@ -97,36 +97,36 @@ int init_INTs(void)
 
 int set_LED(int position, int value)
 {
-	switch(position)
+		switch(position)
 	{
 		case 1:
-		if (value == 0)
+		if (value)
 		{
-			PORTC &= ~(1 << PC1);
+			PORTB &= ~(1 << PB7);
 		}
 		else
 		{
-			PORTC |= (1 << PC1);
+			PORTB |= (1 << PB7);
 		}
 		break;
 		case 2:
-		if (value == 0)
+		if (value)
 		{
-			PORTC &= ~(1 << PC2);
+			PORTC &= ~(1 << PC4);
 		}
 		else
 		{
-			PORTC |= (1 << PC2);
+			PORTC |= (1 << PC4);
 		}
 		break;
 		case 3:
-		if (value == 0)
+		if (value)
 		{
-			PORTC &= ~(1 << PC3);
+			PORTD &= ~(1 << PD7);
 		}
 		else
 		{
-			PORTC |= (1 << PC3);
+			PORTD |= (1 << PD7);
 		}
 		break;
 		
