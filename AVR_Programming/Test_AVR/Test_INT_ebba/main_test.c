@@ -57,7 +57,7 @@ int main(void)
 	}
 }
 
-ISR(PCINT1_vect)
+ISR(PCINT2_vect)
 {
 	//This is the exact same code as used when polling!
 	
@@ -66,15 +66,20 @@ ISR(PCINT1_vect)
     ChannelAint = (PIND & (1<<PIND2)) ? 1 : 0;
     ChannelBint = (PIND & (1<<PIND3)) ? 1 : 0;
 
+
     set_LED(2, ChannelAint);
     set_LED(3, ChannelBint);
 }
 
 int init_LEDs(void)
 {
-	DDRD |= 0x0F;	    // Corresponding pins set as outputs
-	PORTD &= ~(0x0F);	// Initially all LED pins set to 0
-	
+	DDRB |= (1 << PB7);
+	DDRC |= (1 << PC4);	// Corresponding pins set as outputs 0b 0000 1111
+	DDRD |= (1 << PD7);
+	PORTB &= ~(1 << PB7);
+	PORTC &= ~(1 << PC4);	// Initially all LED pins set to 0
+	PORTD &= ~(1 << PD7);
+
 	return 1;
 }
 
