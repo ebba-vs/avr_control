@@ -1,0 +1,192 @@
+
+TestLEDS.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         00000000  00800100  00800100  00000108  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .text         000000b4  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .comment      00000030  00000000  00000000  00000108  2**0
+                  CONTENTS, READONLY
+  3 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  00000138  2**2
+                  CONTENTS, READONLY
+  4 .debug_aranges 00000030  00000000  00000000  00000174  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_info   0000097c  00000000  00000000  000001a4  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 000006d0  00000000  00000000  00000b20  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_line   00000347  00000000  00000000  000011f0  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_frame  00000044  00000000  00000000  00001538  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_str    000003ad  00000000  00000000  0000157c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_loc    0000026a  00000000  00000000  00001929  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 00000020  00000000  00000000  00001b93  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	19 c0       	rjmp	.+50     	; 0x34 <__ctors_end>
+   2:	20 c0       	rjmp	.+64     	; 0x44 <__bad_interrupt>
+   4:	1f c0       	rjmp	.+62     	; 0x44 <__bad_interrupt>
+   6:	1e c0       	rjmp	.+60     	; 0x44 <__bad_interrupt>
+   8:	1d c0       	rjmp	.+58     	; 0x44 <__bad_interrupt>
+   a:	1c c0       	rjmp	.+56     	; 0x44 <__bad_interrupt>
+   c:	1b c0       	rjmp	.+54     	; 0x44 <__bad_interrupt>
+   e:	1a c0       	rjmp	.+52     	; 0x44 <__bad_interrupt>
+  10:	19 c0       	rjmp	.+50     	; 0x44 <__bad_interrupt>
+  12:	18 c0       	rjmp	.+48     	; 0x44 <__bad_interrupt>
+  14:	17 c0       	rjmp	.+46     	; 0x44 <__bad_interrupt>
+  16:	16 c0       	rjmp	.+44     	; 0x44 <__bad_interrupt>
+  18:	15 c0       	rjmp	.+42     	; 0x44 <__bad_interrupt>
+  1a:	14 c0       	rjmp	.+40     	; 0x44 <__bad_interrupt>
+  1c:	13 c0       	rjmp	.+38     	; 0x44 <__bad_interrupt>
+  1e:	12 c0       	rjmp	.+36     	; 0x44 <__bad_interrupt>
+  20:	11 c0       	rjmp	.+34     	; 0x44 <__bad_interrupt>
+  22:	10 c0       	rjmp	.+32     	; 0x44 <__bad_interrupt>
+  24:	0f c0       	rjmp	.+30     	; 0x44 <__bad_interrupt>
+  26:	0e c0       	rjmp	.+28     	; 0x44 <__bad_interrupt>
+  28:	0d c0       	rjmp	.+26     	; 0x44 <__bad_interrupt>
+  2a:	0c c0       	rjmp	.+24     	; 0x44 <__bad_interrupt>
+  2c:	0b c0       	rjmp	.+22     	; 0x44 <__bad_interrupt>
+  2e:	0a c0       	rjmp	.+20     	; 0x44 <__bad_interrupt>
+  30:	09 c0       	rjmp	.+18     	; 0x44 <__bad_interrupt>
+  32:	08 c0       	rjmp	.+16     	; 0x44 <__bad_interrupt>
+
+00000034 <__ctors_end>:
+  34:	11 24       	eor	r1, r1
+  36:	1f be       	out	0x3f, r1	; 63
+  38:	cf ef       	ldi	r28, 0xFF	; 255
+  3a:	d4 e0       	ldi	r29, 0x04	; 4
+  3c:	de bf       	out	0x3e, r29	; 62
+  3e:	cd bf       	out	0x3d, r28	; 61
+  40:	0b d0       	rcall	.+22     	; 0x58 <main>
+  42:	36 c0       	rjmp	.+108    	; 0xb0 <_exit>
+
+00000044 <__bad_interrupt>:
+  44:	dd cf       	rjmp	.-70     	; 0x0 <__vectors>
+
+00000046 <init_LEDs>:
+	return 1;
+}
+
+int init_LEDs(void)
+{
+	DDRC |= 0x0F;	// Corresponding pins set as outputs 0b 0000 1111 
+  46:	87 b1       	in	r24, 0x07	; 7
+  48:	8f 60       	ori	r24, 0x0F	; 15
+  4a:	87 b9       	out	0x07, r24	; 7
+	PORTC &= ~(0x0F);	// Initially all LED pins set to 0
+  4c:	88 b1       	in	r24, 0x08	; 8
+  4e:	80 7f       	andi	r24, 0xF0	; 240
+  50:	88 b9       	out	0x08, r24	; 8
+	return 1;
+}
+  52:	81 e0       	ldi	r24, 0x01	; 1
+  54:	90 e0       	ldi	r25, 0x00	; 0
+  56:	08 95       	ret
+
+00000058 <main>:
+int	set_LED(int position, int value);
+
+
+int main(void)
+{
+	init_LEDs();
+  58:	f6 df       	rcall	.-20     	; 0x46 <init_LEDs>
+		{
+			PORTC &= ~(1 << 1);
+		}
+		else
+		{
+			PORTC |= (1 << 1);
+  5a:	41 9a       	sbi	0x08, 1	; 8
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  5c:	8f e4       	ldi	r24, 0x4F	; 79
+  5e:	93 ec       	ldi	r25, 0xC3	; 195
+  60:	01 97       	sbiw	r24, 0x01	; 1
+  62:	f1 f7       	brne	.-4      	; 0x60 <main+0x8>
+  64:	00 c0       	rjmp	.+0      	; 0x66 <main+0xe>
+  66:	00 00       	nop
+		{
+			PORTC &= ~(1 << 2);
+		}
+		else
+		{
+			PORTC |= (1 << 2);
+  68:	42 9a       	sbi	0x08, 2	; 8
+  6a:	8f e4       	ldi	r24, 0x4F	; 79
+  6c:	93 ec       	ldi	r25, 0xC3	; 195
+  6e:	01 97       	sbiw	r24, 0x01	; 1
+  70:	f1 f7       	brne	.-4      	; 0x6e <main+0x16>
+  72:	00 c0       	rjmp	.+0      	; 0x74 <main+0x1c>
+  74:	00 00       	nop
+		{
+			PORTC &= ~(1 << 3);
+		}
+		else
+		{
+			PORTC |= (1 << 3);
+  76:	43 9a       	sbi	0x08, 3	; 8
+  78:	8f e4       	ldi	r24, 0x4F	; 79
+  7a:	93 ec       	ldi	r25, 0xC3	; 195
+  7c:	01 97       	sbiw	r24, 0x01	; 1
+  7e:	f1 f7       	brne	.-4      	; 0x7c <main+0x24>
+  80:	00 c0       	rjmp	.+0      	; 0x82 <main+0x2a>
+  82:	00 00       	nop
+	switch(position)
+	{
+		case 1:
+		if (value == 0)
+		{
+			PORTC &= ~(1 << 1);
+  84:	41 98       	cbi	0x08, 1	; 8
+  86:	8f e4       	ldi	r24, 0x4F	; 79
+  88:	93 ec       	ldi	r25, 0xC3	; 195
+  8a:	01 97       	sbiw	r24, 0x01	; 1
+  8c:	f1 f7       	brne	.-4      	; 0x8a <main+0x32>
+  8e:	00 c0       	rjmp	.+0      	; 0x90 <main+0x38>
+  90:	00 00       	nop
+		}
+		break;
+		case 2:
+		if (value == 0)
+		{
+			PORTC &= ~(1 << 2);
+  92:	42 98       	cbi	0x08, 2	; 8
+  94:	8f e4       	ldi	r24, 0x4F	; 79
+  96:	93 ec       	ldi	r25, 0xC3	; 195
+  98:	01 97       	sbiw	r24, 0x01	; 1
+  9a:	f1 f7       	brne	.-4      	; 0x98 <main+0x40>
+  9c:	00 c0       	rjmp	.+0      	; 0x9e <main+0x46>
+  9e:	00 00       	nop
+		}
+		break;
+		case 3:
+		if (value == 0)
+		{
+			PORTC &= ~(1 << 3);
+  a0:	43 98       	cbi	0x08, 3	; 8
+  a2:	8f e4       	ldi	r24, 0x4F	; 79
+  a4:	93 ec       	ldi	r25, 0xC3	; 195
+  a6:	01 97       	sbiw	r24, 0x01	; 1
+  a8:	f1 f7       	brne	.-4      	; 0xa6 <main+0x4e>
+  aa:	00 c0       	rjmp	.+0      	; 0xac <main+0x54>
+  ac:	00 00       	nop
+  ae:	d5 cf       	rjmp	.-86     	; 0x5a <main+0x2>
+
+000000b0 <_exit>:
+  b0:	f8 94       	cli
+
+000000b2 <__stop_program>:
+  b2:	ff cf       	rjmp	.-2      	; 0xb2 <__stop_program>
