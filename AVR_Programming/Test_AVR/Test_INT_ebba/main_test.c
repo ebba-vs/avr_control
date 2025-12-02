@@ -30,8 +30,8 @@ int main(void)
     // PORTD |= (1<<PD2) | (1<<PD3);
 
     // Keep interrupts disabled for now (pure polling test)
-    // init_INTs();
-    // sei();
+    init_INTs();
+    sei();
 				
 	/* Uncomment these two lines to use interrupts instead of polling...
 	init_INTs();
@@ -41,18 +41,16 @@ int main(void)
 	while(1)
     {
        // Polling... - Comment out these four lines when running with interrupts.
-	   ChannelA = PIND & (1<<PIND2);	// Bits 2 and 3 are the ones with the sensor information
-	   ChannelB = PIND & (1<<PIND3);	
-	   set_LED(2,ChannelA);
-	   set_LED(3,ChannelB);	 
+	   //ChannelA = PIND & (1<<PIND2);	// Bits 2 and 3 are the ones with the sensor information
+	   //ChannelB = PIND & (1<<PIND3);	
+	   //set_LED(2,ChannelA);
+	   //set_LED(3,ChannelB);	 
 	 
 	   
 	   // Flash an LED while waiting...
 	   set_LED(1,1);
-	   _delay_ms(1000);
-	   set_LED(1,0);
-	   _delay_ms(1000);
-	 
+	   //_delay_ms(1000);
+
 	     
 	}
 }
@@ -60,15 +58,18 @@ int main(void)
 ISR(PCINT2_vect)
 {
 	//This is the exact same code as used when polling!
-	
-    char ChannelAint, ChannelBint;
-
-    ChannelAint = (PIND & (1<<PIND2)) ? 1 : 0;
-    ChannelBint = (PIND & (1<<PIND3)) ? 1 : 0;
-
-
-    set_LED(2, ChannelAint);
-    set_LED(3, ChannelBint);
+	 set_LED(1,0);
+	 
+	 if((PIND & (1<<PIND2))) {
+		 set_LED(2,1);
+	 } else {
+		 set_LED(2,0);
+	 }
+	if((PIND & (1<<PIND3))) {
+		set_LED(3,1);
+		} else {
+		set_LED(3,0);
+		}
 }
 
 int init_LEDs(void)

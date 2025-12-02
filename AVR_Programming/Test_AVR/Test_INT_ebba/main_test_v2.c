@@ -28,6 +28,7 @@ int main(void)
     DDRD &= ~((1<<DDD2) | (1<<DDD3));   // PD2, PD3 = inputs
     // Optional: enable internal pull-ups if your encoder needs it:
     // PORTD |= (1<<PD2) | (1<<PD3);
+	DDRD |= ((1<<DDD5) | (1<<DDD6)) // PD5,PD6 = outputs
 
     // Keep interrupts disabled for now (pure polling test)
     init_INTs();
@@ -101,7 +102,7 @@ int init_INTs(void)
     PCICR  |= (1<<PCIE2);
 
     return 1;
-}
+}-----------                      9
 
 int init_PWM(void)
 {
