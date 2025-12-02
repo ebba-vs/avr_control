@@ -15,20 +15,23 @@
 int init_LEDs(void);
 int init_INTs(void);
 int set_LED(int position, int value);
-int c
+void set_PWM(int direction);
 
+volatile int8_t prev_state = 0;
 
 int main(void)
 {
     //Local variables declaration
 	char ChannelA, ChannelB;
+	int8_t TOP = 255;
+	int8_t BOTTOM = 0;
 	
 	init_LEDs();
 
     DDRD &= ~((1<<DDD2) | (1<<DDD3));   // PD2, PD3 = inputs
     // Optional: enable internal pull-ups if your encoder needs it:
     // PORTD |= (1<<PD2) | (1<<PD3);
-	DDRD |= ((1<<DDD5) | (1<<DDD6)) // PD5,PD6 = outputs
+	DDRD |= ((1<<DDD5) | (1<<DDD6)); // PD5,PD6 = outputs
 
     // Keep interrupts disabled for now (pure polling test)
     init_INTs();
@@ -58,7 +61,46 @@ int main(void)
 
 ISR(PCINT2_vect)
 {
+	int8_t this_state = (PIND & 0x0C); // mask for PD2 + PD3 
+
 	
+    // Ignore if no change (bouncing or multiple interrupts)
+    if (this_state == prev_state) {
+        return;
+    }
+
+    // Forward sequence: 0 -> 8 -> 12 -> 4 -> 0
+    if (prev_state == 0 && this_state == 8) {
+        set_PWM(1);
+    }
+    else if (prev_state == 8 && this_state == 12) {
+        set_PWM(1);
+    }
+    else if (prev_state == 12 && this_state == 4) {
+        set_PWM(1);
+    }
+    else if (prev_state == 4 && this_state == 0) {
+        set_PWM(1);
+    }
+    // Backward sequence: 0 -> 4 -> 12 -> 8 -> 0
+    else if (prev_state == 0 && this_state == 4) {
+        set_PWM(-1);
+    }
+    else if (prev_state == 4 && this_state == 12) {
+        set_PWM(-1);
+    }
+    else if (prev_state == 12 && this_state == 8) {
+        set_PWM(-1);
+    }
+    else if (prev_state == 8 && this_state == 0) {
+        set_PWM(-1);
+    }
+    // Any other weird jump: ignore
+    else {
+        // do nothing
+    }
+    prev_state = this_state;
+
 	//This is the exact same code as used when polling!
 	 set_LED(1,0);
 	 
@@ -73,6 +115,19 @@ ISR(PCINT2_vect)
 		} else {
 		set_LED(3,0);
 		}
+}
+void set_PWM(int direction)
+{
+    if (direction == 1) {
+        if (OCR0A <= 255 - 5) {     // avoid overflow
+            OCR0A += 5;
+        }
+    }
+    else if (direction == -1) {
+        if (OCR0A >= 5) {           // avoid underflow
+            OCR0A -= 5;
+        }
+    }
 }
 
 int init_LEDs(void)
@@ -106,9 +161,24 @@ int init_INTs(void)
 
 int init_PWM(void)
 {
-	TCCR0A |= (COM0A1<<1) | (COM0A0<<1) | (COM0B1<<1) | (COM0B0<<1) | (WGM00 << 1)
-	TCCR0A &= ~(WGM01<<1)
-	
+	    // PD6 (OC0A) as output
+    DDRD |= (1 << DDD6);
+
+	TCCR0A = 0;
+    TCCR0B = 0;
+
+	TCCR0A |= (1 << WGM00);
+
+    // Non-inverting PWM on OC0A: COM0A1:0 = 0b10
+    TCCR0A |= (1 << COM0A1);
+    TCCR0A &= ~(1 << COM0A0);
+
+	// Prescaler: clk/8  (CS01 = 1)
+    // F_PWM = F_CPU / (2 * N * 256) = 1MHz / (2*8*256) ≈ 244 Hz
+    TCCR0B |= (1 << CS01);
+
+    // Start with 0% duty
+    OCR0A = 0;
 }
 
 
