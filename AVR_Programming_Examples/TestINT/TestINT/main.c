@@ -53,6 +53,7 @@ ISR(PCINT1_vect)
 {
 	//This is the exact same code as used when polling!
 	
+	
 	char ChannelAint, ChannelBint;
 	ChannelAint = PINC & (1<<PINC4);	// Bits 4 and 5 are the ones with the sensor information
 	ChannelBint = PINC & (1<<PINC5);	
