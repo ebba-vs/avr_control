@@ -36,7 +36,11 @@ void uart_print_rpm(int16_t rpm_q8_7);
 #define MYUBRR F_CPU/16/BAUD - 1
 
 volatile uint16_t dt_ticks = 0;              // ticks between encoder edges
-volatile int16_t motorspeed_q = 0;           // RPM in Q8.7
+volatile uint16_t motorspeed_q = 0;           // RPM in Q8.7
+
+volatile uint8_t edge = 0;
+volatile uint32_t sum = 0;
+volatile uint16_t dt_tick = 0;   // ticks since last edge
 
 volatile uint8_t received_data = 0;
 volatile bool new_cmd = false;
@@ -189,16 +193,14 @@ int16_t get_rpm_q8_7(void)
 {
 	uint16_t ticks;
 
-	// safely copy dt_ticks (16-bit volatile)
 	cli();
-	ticks = dt_ticks;
+	ticks = dt_tick;
 	sei();
 
 	if (ticks == 0) {
 		return 0;
 	}
 
-	// rpm_q = K_RPM_Q / ticks  (integer division)
 	uint32_t temp = K_RPM_Q / (uint32_t) ticks;
 
 	// saturate to int16_t range
@@ -211,8 +213,18 @@ int16_t get_rpm_q8_7(void)
 
 ISR(PCINT2_vect)
 {
-	dt_ticks = TCNT1;   // ticks since last edge
-	TCNT1   = 0;        // restart timer for next period
+	int16_t last_tick = 0;
+	if (edge<16) {
+		int16_t current_tick = TCNT1;
+		dt_ticks = current_tick - last_tick;
+		sum += dt_ticks;
+		edge++;
+	} else {
+		dt_tick = sum / edge;
+		sum = 0;
+		egde = 0;
+		TCNT1 = 0;        // restart timer for next period
+	}
 }
 
 ISR(USART_RX_vect){
