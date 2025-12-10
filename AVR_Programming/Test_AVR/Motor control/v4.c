@@ -34,14 +34,15 @@ volatile uint8_t edge = 0;
 volatile uint32_t sum = 0;
 volatile uint16_t dt_tick = 0; // ticks since last edge
 
-//volatile uint8_t received_data;
-volatile int8_t new_cmd = 0;
+volatile uint8_t received_data = 0;
+volatile uint8_t new_cmd = 0;
 // 60 * F_CPU * 2^7 / (prescaler * edges)
 static const uint32_t K_RPM_Q = (uint32_t)((60ULL * F_CPU * (uint32_t)Q_SCALE) /
 (TIMER1_PRESCALER * EDGES_PER_REV));
 
 
 void USART_Init(unsigned int ubrr) {
+	cli();
 	UBRR0H = (uint8_t)(ubrr >> 8);
 	UBRR0L = (uint8_t)ubrr;
 
@@ -51,17 +52,12 @@ void USART_Init(unsigned int ubrr) {
 	UCSR0C = (0 << USBS0) | (3 << UCSZ00);                // 8N1
 }
 
-void USART_Transmit(unsigned char c) {
+void USART_Transmit(uint8_t c) {
 	while (!(UCSR0A & (1 << UDRE0)))
 	; // Wait until buffer empty
 	//__delay_ms(1000);
 	//set_LED(1, 0);
 	UDR0 = c;
-}
-unsigned char USART_Receive() {
-	while (!(UCSR0A & (1 << RXC0)))
-	;
-	return UDR0;
 }
 
 void uart_send_string(const char *s) {
@@ -70,7 +66,8 @@ void uart_send_string(const char *s) {
 }
 
 void uart_print_rpm(int16_t rpm_q8_7) {
-	int rpm = rpm_q8_7 >> n; // Q8.7 -> float
+	int rpm = (uint8_t)rpm_q8_7;
+	// >> n; // Q8.7 -> float
 
 	char str[20];
 	sprintf(str, "%d", rpm);
@@ -184,42 +181,45 @@ int updatePWM(int value){
 	//OCR0A = value; //Motor pwm
 	//rpm=1; //Set for test with fixed PWM
 	
-	OCR0B = value; //Control led
+	OCR0A = value; //Control led
 	return value;
 }
 int main(void) {
 	//int sp;
 	//int8_t serialin, serialout;
 	int16_t motorspeed;
-
-	USART_Init(MYUBRR);
-	init_INTs();
-	
 	init_LEDs();
 	init_PWM();
+	
+	USART_Init(MYUBRR);
+	init_INTs();
 	
 	timer1_init();
 
 	sei();
 
 	while (1) {
-		int updatePWM(duty);
+		//USART_Transmit(a);
+		//_delay_ms(1000);
+		
+		
 		if (new_cmd) {
-			unsigned char cmd = USART_Receive();
-			// uint8_t cmd = received_data; // copy to local
 			new_cmd = 0;
-			if(cmd > 0) {
-				set_PWM(1);
+			uint8_t cmd = received_data; // copy to local
+			if (received_data == cmd) {
+				USART_Transmit(cmd);
+				uint8_t cmd = received_data;
+				
+				if(cmd > 0) {
+					set_PWM(1);
+				}
+				else {
+					set_PWM(-1);
+				}
 			}
-			else {
-				set_PWM(-1);
-			}
-
-			// echo back what we got
-			USART_Transmit(cmd);
-
-			motorspeed = get_rpm_q8_7();
-			uart_print_rpm(motorspeed);
+			
+			//motorspeed = get_rpm_q8_7();
+			//uart_print_rpm(motorspeed);
 		}
 	}
 }
@@ -243,7 +243,10 @@ ISR(PCINT2_vect) {
 }
 
 ISR(USART_RX_vect) {
-	//received_data = UDR0; // grab byte
-	new_cmd = 1;       // signal main
+	if(!new_cmd) {
+		received_data = UDR0;
+		new_cmd = 1;       // signal main
+	}
+	
 }
 
