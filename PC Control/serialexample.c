@@ -63,7 +63,7 @@ int main(void)
 		
 		
 		/*Wait a little bit... (or until a signal comes!)*/
-		usleep(100000);
+		usleep(10000);
 		
 		/*Read the incoming string */
 		read(sp,&cin,1);
