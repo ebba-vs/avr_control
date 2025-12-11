@@ -28,7 +28,7 @@ int main(void)
 	// int8_t TOP = 255;
 	// int8_t BOTTOM = 0;
 	
-	//init_LEDs();
+	//init_LEDs();git
 
    // DDRD &= ~((1<<DDD2) | (1<<DDD3));   // PD2, PD3 = inputs
     // Optional: enable internal pull-ups if your encoder needs it:

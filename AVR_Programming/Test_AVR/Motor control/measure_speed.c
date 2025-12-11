@@ -21,6 +21,26 @@ static const uint32_t K_RPM_Q =
     (uint32_t)((60ULL * F_CPU * (uint32_t)Q_SCALE) /
                (TIMER1_PRESCALER * EDGES_PER_REV));
 
+int main(void)
+{
+    uart_init();
+    init_LEDs();        // assume this exists elsewhere
+    init_INTs();
+    timer1_init();
+    sei();
+
+    while (1) {
+        if(new_cmd){
+			uart_send_char(received_data);
+			_delay_ms(500);
+			new_cmd = 0;
+		}
+        motorspeed_q = get_rpm_q8_7();
+        uart_print_rpm(motorspeed_q);   // print to Serial Monitor
+        _delay_ms(200);
+    }
+}
+
 void uart_init(void)
 {
     UBRR0H = (uint8_t)(UBRR_VALUE >> 8);
@@ -28,8 +48,9 @@ void uart_init(void)
 
     DDRD |= (1 << PD1);                // TXD as output
 
-    UCSR0B = (1 << TXEN0);             // Enable transmitter
-    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);  // 8 data bits, 1 stop bit
+   	UCSR0B = (1 << TXEN0) | (1 << RXEN0) | (1 << RXCIE0);            // Enable transmitter
+    // UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);  // 8 data bits, 1 stop bit
+    UCSR0C = (0 << USBS0) | (3 << UCSZ00); //UCSZ01
 }
 
 void uart_send_char(char c)
@@ -107,17 +128,9 @@ ISR(PCINT2_vect)
     TCNT1   = 0;        // restart timer for next period
 }
 
-int main(void)
-{
-    uart_init();
-    init_LEDs();        // assume this exists elsewhere
-    init_INTs();
-    timer1_init();
-    sei();
-
-    while (1) {
-        motorspeed_q = get_rpm_q8_7();
-        uart_print_rpm(motorspeed_q);   // print to Serial Monitor
-        _delay_ms(200);
-    }
+ISR(USART_RX_vect){
+	received_data = UDR0;
+	new_cmd = 1;
 }
+
+
