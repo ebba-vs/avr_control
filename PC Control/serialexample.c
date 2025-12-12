@@ -65,8 +65,10 @@ int main(void) {
 
     /*Read the incoming string */
     int n = read(sp, &cin, 1);
-    if (n <= 0) {
-      printf("Warning: No data received!\n");
+    if (n < 0) {
+      printf("Error: Read failed!\n");
+    } else if (n == 0) {
+      printf("Timeout: AVR did not reply!\n");
     }
 
     /*Check that the input string is equal to the output one! */

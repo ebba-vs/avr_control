@@ -11,9 +11,7 @@
 #include <avr/io.h>
 #include <stdbool.h>
 #include <stdint.h> // INT16_MAX
-#include <stdint.h> // INT16_MAX
 #include <stdio.h>
-#include <stdlib.h> // dtostrf
 #include <stdlib.h> // dtostrf
 #include <util/delay.h>
 
@@ -222,7 +220,6 @@ ISR(PCINT2_vect) {
     dt_tick = sum / 16;
     sum = 0;
     edge = 0;
-    // TCNT1 is NOT reset, allowing free-running accuracy
   }
 }
 

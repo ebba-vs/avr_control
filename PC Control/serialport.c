@@ -52,9 +52,9 @@ int serial_init(char *modemdevice, int canonical) {
   newtio.c_cflag &= ~CRTSCTS;
   newtio.c_cflag |= CS8 | CLOCAL | CREAD;
 
-  // Blocking read: wait for at least 1 byte
-  newtio.c_cc[VMIN] = 1;
-  newtio.c_cc[VTIME] = 0;
+  // Timeout read: wait up to 1.0s (10 * 0.1s)
+  newtio.c_cc[VMIN] = 0;
+  newtio.c_cc[VTIME] = 10;
 
   /*This part has been commented to make it work with the AVR*/
   /*
