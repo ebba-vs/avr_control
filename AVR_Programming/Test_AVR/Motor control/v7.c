@@ -22,8 +22,7 @@ void init_INTs(void);
 void init_PWM(void);
 int set_LED(int position, int value);
 void set_PWM(int direction);
-void USART_Transmit(const char c);
-void USART_Transmit(const char c);
+void USART_Transmit(unsigned char c);
 void USART_Init(unsigned int ubrr);
 unsigned char get_rpm_q8_7(uint16_t dt_tick);
 
@@ -43,7 +42,7 @@ uint8_t	flag = 0;
 volatile uint16_t dt_ticks = 0;     // ticks between encoder edges
 volatile uint16_t motorspeed_q = 0; // RPM in Q8.7
 
-volatile uint16_t[] delta_ticks = 0;
+volatile uint16_t delta_ticks[16];
 volatile int i = 0;
 volatile uint8_t n_ticks = 0;
 volatile uint32_t sum = 0;
@@ -53,7 +52,7 @@ volatile uint8_t received_data = 0;
 volatile uint8_t new_cmd = 0;
 volatile uint8_t motorspeed = 0;
 
-volatile uint8_t rpm = 0;
+//volatile uint8_t rpm = 0;
 
 volatile uint16_t last_tick = 0;
 
@@ -67,13 +66,16 @@ void USART_Init(unsigned int ubrr) {
 	UBRR0L = (uint8_t)ubrr;
 
 	DDRD |= (1 << PD1); // TXD as output
+	//DDRD &= ~(1 << PD0); 
 
 	UCSR0B = (1 << TXEN0) | (1 << RXEN0) | (1 << RXCIE0); // Enable transmitter
 	UCSR0C = (0 << USBS0) | (3 << UCSZ00);                // 8N1
 }
 
-void USART_Transmit(uint8_t c) {
-	while (!(UCSR0A & (1 << UDRE0))); // Wait until buffer empty
+void USART_Transmit(unsigned char c) {
+	while (!(UCSR0A & (1 << UDRE0))) {
+		
+		} // Wait until buffer empty
 	UDR0 = c;
 }
 
@@ -146,26 +148,16 @@ void init_PWM() {
 	// PD6 (OC0A) as output
 	DDRD |= (1 << DDD6);
 
-	TCCR0A = 0;
-	TCCR0B = 0;
+    TCCR0A = (1 << WGM00) | (1 << COM0A1);
+    TCCR0B = (1 << CS01);  // prescaler /8 (adjust if needed)
 
-	TCCR0A |= (1 << WGM00);
-
-	// Non-inverting PWM on OC0A: COM0A1:0 = 0b10
-	TCCR0A |= (1 << COM0A1);
-	TCCR0A &= ~(1 << COM0A0);
-
-	// Prescaler: clk/8  (CS01 = 1)
-	// F_PWM = F_CPU / (2 * N * 256) = 1MHz / (2*8*256) ? 244 Hz
-	TCCR0B |= (1 << CS01); // no prescaling
-
-	OCR0A = 100;
-	set_LED(3,0);
+	OCR0A = 0;
 }
 
 void set_PWM(int direction) {
 	if (direction == 1) {
 		if (OCR0A <= 255 - 5) { // avoid overflow
+			set_LED(2,0);
 			OCR0A += 5;
 		}
 		} else if (direction == -1) {
@@ -201,13 +193,7 @@ void set_PWM(int direction) {
 	////uint8_t rpm = temp16 >> n;		// Convert to integer Q16.0
 	//return rpm;		// Q8.0 rpm
 //}
-int updatePWM(int value){
-	//OCR0A = value; //Motor pwm
-	//rpm=1; //Set for test with fixed PWM
-	
-	OCR0A = value; //Control led
-	return value;
-}
+
 int main(void) {
 	//int sp;
 	//int8_t serialin, serialout;
@@ -228,7 +214,8 @@ int main(void) {
 		
 		
 		if (new_cmd) {
-			uint8_t cmd = received_data; // copy to local
+			unsigned char cmd = received_data; // copy to local
+			new_cmd = 0;
 			//uart_print_rpm(motorspeed);
 			//uart_print_rpm(motorspeed);
 			
@@ -238,14 +225,11 @@ int main(void) {
 			else {
 				set_PWM(-1);
 			}
-			new_cmd = 0;
-			
-			
+			USART_Transmit(cmd);		
 		}
 	}
 }
 ISR(PCINT2_vect) {
-	set_LED(3,1);
 	uint16_t delta = TCNT1;
 	// Unsigned subtraction handles overflow automatically
 	
@@ -265,35 +249,37 @@ ISR(PCINT2_vect) {
 }
 
 ISR(USART_RX_vect) {
-	set_LED(1,0);
-	received_data = (uint8_t) UDR0;
-	uint16_t sum = 0;
-	for (int k = 0; k < sizeof(delta_ticks); i) {
-		sum+= delta_ticks[k];
-	}
-	int16_t dt_tick = sum / sizeof(delta_ticks);
-
-	if (dt_tick == 0) {
-		rpm = 0;
-	}
-	else {
-		set_LED(2,0);
-		uint32_t temp = K_rpm + (dt_tick >> 1);		// round
-		temp = temp / dt_tick;			// Division Q25.7 / Q16.0 -> Q9.7
-		// uint16_t temp16 = (uint16_t) temp;		//Truncate Q8.7
-
-		// saturate to int8_t range
-		uint16_t temp16 = temp;
-		if (temp16 > MAX_RPM_Q) {
-			temp16 = MAX_RPM_Q;
-			}
-		uint8_t temp8 = temp16 >> n;	// right shift 7 -> real number
-		rpm = temp8;
-	}
 	
-	// motorspeed = get_rpm_q8_7(dt_tick);
-	USART_Transmit(rpm);
-	new_cmd = 1;       // signal main
+	received_data = UDR0;
+	//USART_Transmit(0x42);
+	new_cmd = 1;
+
+	//set_LED(1,0);
+	//received_data = UDR0;
+	//new_cmd = 1;
+	//volatile uint8_t rpm;
+	//uint32_t sum = 0;
+	//for (int k = 0; k < sizeof(delta_ticks); k++) {
+		//sum+= delta_ticks[k];
+	//}
+	//int16_t dt_tick = sum / sizeof(delta_ticks);
+//
+	//if (dt_tick == 0) {
+		//rpm = 0;
+		//USART_Transmit(rpm);
+	//}
+	//else {
+		//set_LED(2,0);
+		//uint32_t temp = K_rpm + (dt_tick >> 1);		// round
+		//temp = temp / dt_tick;			// Division Q25.7 / Q16.0 -> Q9.7
+		//uint16_t temp16 = temp;
+		//if (temp16 > MAX_RPM_Q) {
+			//temp16 = MAX_RPM_Q;
+			//}
+		//uint8_t temp8 = temp16 >> n;	// right shift 7 -> real number
+		//rpm = temp8;
+		//USART_Transmit(rpm);
+	//}
 	
 }
 
