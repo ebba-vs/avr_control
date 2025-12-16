@@ -11,11 +11,11 @@
 
 static void drain_stream(int sp, int ms_total)
 {
-    // Read and print any streamed RPM bytes for ms_total milliseconds
+    // read and print any streamed RPM bytes for ms_total milliseconds
     unsigned char b;
     int loops = ms_total / 10;
     for (int i = 0; i < loops; i++) {
-        // Try to read a byte (non-blocking depends on serialport.c settings)
+        // try   read a byte (non-blocking depends on serialport.c settings)
         if (read(sp, &b, 1) == 1) {
             printf("RPM: %u\n", (unsigned)b);
             fflush(stdout);
@@ -38,28 +38,28 @@ int main(void)
         unsigned char cmd;
         unsigned char rpm;
 
-        printf("\nEnter command (0=request RPM, 1..120=set RPM, 255=quit): ");
+        printf("\nEnter command (0=request RPM, 1=position control, 1..120=set RPM, 255=quit): ");
         if (scanf("%u", &tmp) != 1) {
             printf("Bad input, exiting.\n");
             break;
         }
         if (tmp == 255) break;
 
-        // Match AVR clamp behavior for setpoints
+        // match AVR clamp behavior for setpoints
         if (tmp > 255) tmp = 255;
         if (tmp > 120 && tmp != 0) tmp = 120;
 
         cmd = (unsigned char)tmp;
 
-        // Send command byte
+        // send command byte
         if (write(sp, &cmd, 1) != 1) {
             printf("Write failed.\n");
             continue;
         }
 
-        // If cmd==0, AVR replies immediately with 1 byte rpm_acc
+        // If cmd==0 -> avr replies w 1 byte rpm_acc
         if (cmd == 0) {
-            // Give AVR a moment to compute & respond
+            // give AVR time to compute & respond
             usleep(20000);
 
             if (read(sp, &rpm, 1) == 1) {
@@ -71,9 +71,9 @@ int main(void)
             printf("Setpoint sent: %u RPM\n", (unsigned)cmd);
             printf("Reading stream for ~2 seconds (Ctrl+C to stop program)...\n");
 
-            // Your AVR sends rpm every ~15 PI ticks.
-            // With Ts ~ 0.0655 s and "every 15 ticks" => ~1 second between bytes.
-            // Read for 2 seconds so you likely see at least 1-2 samples.
+            // AVR sends rpm every 15 ish PI ticks
+            // With Ts ish 0.0655 s and "every 15 ticks" => ~1 second between bytes
+            // Read for 2 seconds --> get 1-2 samples
             drain_stream(sp, 2000);
         }
     }
