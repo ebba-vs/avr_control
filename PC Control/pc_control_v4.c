@@ -38,7 +38,7 @@ int main(void)
         unsigned char cmd;
         unsigned char rpm;
 
-        printf("\nEnter command (0=request RPM, 1=position control, 1..120=set RPM, 255=quit): ");
+        printf("\nEnter command (0=request RPM, 1..120=set RPM): ");
         if (scanf("%u", &tmp) != 1) {
             printf("Bad input, exiting.\n");
             break;
